@@ -14,7 +14,7 @@ public:
     // Delete copy constructor and assignment — prevents copying the singleton
     FlightManager(const FlightManager &) = delete;
     FlightManager &operator=(const FlightManager &) = delete;
-
+    vector<Flight> &getFlights() { return flights; };
     static FlightManager &getInstance()
     {
         static FlightManager instance; // created only once

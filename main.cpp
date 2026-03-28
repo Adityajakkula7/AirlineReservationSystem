@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 #include "include/Airport.h"
 #include "include/Flight.h"
 #include "include/Seat.h"
@@ -15,122 +16,273 @@
 #include "include/BookingContext.h"
 using namespace std;
 
-void printDivider(string title)
+// ── helpers ──────────────────────────────────────────────
+void printLine()
 {
-    cout << "\n========== " << title << " ==========" << endl;
+    cout << "----------------------------------------" << endl;
 }
 
-int main()
+void printMenu()
 {
+    printLine();
+    cout << "   AIRLINE RESERVATION SYSTEM" << endl;
+    printLine();
+    cout << "  1. View all flights" << endl;
+    cout << "  2. Search flights" << endl;
+    cout << "  3. Book a seat" << endl;
+    cout << "  4. View all bookings" << endl;
+    cout << "  5. Cancel a booking" << endl;
+    cout << "  6. Exit" << endl;
+    printLine();
+    cout << "  Enter choice: ";
+}
 
-    // ─── STEP 1: Setup Airports ───────────────────────────
-    printDivider("SETTING UP AIRPORTS");
+// ── setup sample data ─────────────────────────────────────
+void setupData(FlightManager &fm)
+{
     Airport bom("BOM", "Chhatrapati Shivaji", "Mumbai");
     Airport del("DEL", "Indira Gandhi", "Delhi");
     Airport blr("BLR", "Kempegowda", "Bangalore");
-    cout << "Airports created: BOM, DEL, BLR" << endl;
+    Airport hyd("HYD", "Rajiv Gandhi", "Hyderabad");
 
-    // ─── STEP 2: Setup Flights ────────────────────────────
-    printDivider("SETTING UP FLIGHTS");
-    Flight f1("AI101", bom, del, 3); // only 3 seats for demo
-    Flight f2("6E202", bom, del, 2);
-    Flight f3("SG303", bom, blr, 5);
+    fm.addFlight(Flight("AI101", bom, del, 5));
+    fm.addFlight(Flight("6E202", bom, del, 3));
+    fm.addFlight(Flight("SG303", bom, blr, 4));
+    fm.addFlight(Flight("AI404", del, hyd, 6));
+    fm.addFlight(Flight("6E505", blr, hyd, 2));
+}
 
-    FlightManager &fm = FlightManager::getInstance();
-    fm.addFlight(f1);
-    fm.addFlight(f2);
-    fm.addFlight(f3);
+// ── option handlers ───────────────────────────────────────
+void viewAllFlights(FlightManager &fm)
+{
+    printLine();
     fm.listAllFlights();
+}
 
-    // ─── STEP 3: Search Flights ───────────────────────────
-    printDivider("SEARCHING FLIGHTS: Mumbai -> Delhi");
-    vector<Flight> results = fm.searchFlights("BOM", "DEL");
+void searchFlights(FlightManager &fm)
+{
+    string origin, dest;
+    cout << "  Enter origin code (e.g. BOM): ";
+    cin >> origin;
+    cout << "  Enter destination code (e.g. DEL): ";
+    cin >> dest;
+    printLine();
+
+    vector<Flight> results = fm.searchFlights(origin, dest);
     if (results.empty())
     {
-        cout << "No flights found!" << endl;
+        cout << "  No flights found for " << origin << " -> " << dest << endl;
     }
     else
     {
+        cout << "  Flights found:" << endl;
         for (Flight &f : results)
         {
-            cout << "Found: " << f.getFlightNumber()
-                 << " | Seats available: " << f.getAvailableSeats()
+            cout << "  " << f.getFlightNumber()
+                 << " | " << f.getOrigin().getCity()
+                 << " -> " << f.getDestination().getCity()
+                 << " | Available seats: " << f.getAvailableSeats()
                  << endl;
         }
     }
+}
 
-    // ─── STEP 4: Create Passengers ────────────────────────
-    printDivider("PASSENGERS");
-    Passenger p1("P001", "Akshath", "akshath@gmail.com", "9999999999");
-    Passenger p2("P002", "Rahul", "rahul@gmail.com", "8888888888");
-    cout << "Passengers created: " << p1.getName() << ", " << p2.getName() << endl;
+void bookSeat(BookingManager &bm, FlightManager &fm)
+{
+    // Passenger details
+    string name, email, phone;
+    cout << "  Enter your name: ";
+    cin.ignore();
+    getline(cin, name);
+    cout << "  Enter email: ";
+    cin >> email;
+    cout << "  Enter phone: ";
+    cin >> phone;
 
-    // ─── STEP 5: Setup Seats ──────────────────────────────
-    printDivider("SEATS");
-    Seat s1("1A", SeatType::FIRST_CLASS, 15000);
-    Seat s2("25C", SeatType::ECONOMY, 3000);
-    Seat s3("10B", SeatType::BUSINESS, 8000);
-    cout << "Seats created: 1A (First Class), 25C (Economy), 10B (Business)" << endl;
+    // Flight selection
+    string flightNum;
+    cout << "  Enter flight number to book (e.g. AI101): ";
+    cin >> flightNum;
 
-    // ─── STEP 6: Create Bookings ──────────────────────────
-    printDivider("CREATING BOOKINGS");
-    BookingManager &bm = BookingManager::getInstance();
+    vector<Flight> all = fm.searchFlights("", "");
+    Flight *chosen = nullptr;
+    vector<Flight> &flights = fm.getFlights();
+    for (Flight &f : flights)
+    {
+        if (f.getFlightNumber() == flightNum)
+        {
+            chosen = &f;
+            break;
+        }
+    }
 
-    bm.createBooking(p1, f1, s1);
-    bm.createBooking(p2, f1, s2);
+    if (chosen == nullptr)
+    {
+        cout << "  Flight not found!" << endl;
+        return;
+    }
 
-    // Get actual bookings from map — not copies!
-    Booking *b1 = bm.getBooking("BK001");
-    Booking *b2 = bm.getBooking("BK002");
+    if (chosen->getAvailableSeats() == 0)
+    {
+        cout << "  Sorry, no seats available on this flight!" << endl;
+        return;
+    }
 
-    b1->printSummary();
-    b2->printSummary();
+    // Seat type
+    int seatChoice;
+    cout << "  Select seat type:" << endl;
+    cout << "    1. Economy    - Rs.3000" << endl;
+    cout << "    2. Business   - Rs.8000" << endl;
+    cout << "    3. First Class- Rs.15000" << endl;
+    cout << "  Choice: ";
+    cin >> seatChoice;
 
-    // ─── STEP 7: Attach Notifications ────────────────────
-    printDivider("ATTACHING NOTIFICATIONS");
-    EmailNotification email1("akshath@gmail.com");
-    SMSNotification sms1("9999999999");
-    b1->addObserver(&email1);
-    b1->addObserver(&sms1);
+    SeatType type;
+    double price;
+    string seatNum;
+    if (seatChoice == 1)
+    {
+        type = SeatType::ECONOMY;
+        price = 3000;
+        seatNum = "E" + to_string(rand() % 50 + 1);
+    }
+    else if (seatChoice == 2)
+    {
+        type = SeatType::BUSINESS;
+        price = 8000;
+        seatNum = "B" + to_string(rand() % 20 + 1);
+    }
+    else
+    {
+        type = SeatType::FIRST_CLASS;
+        price = 15000;
+        seatNum = "F" + to_string(rand() % 10 + 1);
+    }
 
-    EmailNotification email2("rahul@gmail.com");
-    SMSNotification sms2("8888888888");
-    b2->addObserver(&email2);
-    b2->addObserver(&sms2);
-    cout << "Notifications attached for both passengers!" << endl;
+    // Payment
+    int payChoice;
+    cout << "  Select payment method:" << endl;
+    cout << "    1. UPI" << endl;
+    cout << "    2. Credit Card" << endl;
+    cout << "    3. Net Banking" << endl;
+    cout << "  Choice: ";
+    cin >> payChoice;
 
-    // ─── STEP 8: Process Payments ─────────────────────────
-    printDivider("PROCESSING PAYMENTS");
+    PaymentStrategy *payment = nullptr;
+    if (payChoice == 1)
+    {
+        string upiId;
+        cout << "  Enter UPI ID: ";
+        cin >> upiId;
+        payment = new UPIPayment(upiId);
+    }
+    else if (payChoice == 2)
+    {
+        string card, holder;
+        cout << "  Enter card number: ";
+        cin >> card;
+        cout << "  Enter card holder name: ";
+        cin.ignore();
+        getline(cin, holder);
+        payment = new CreditCardPayment(card, holder);
+    }
+    else
+    {
+        string bank, acc;
+        cout << "  Enter bank name: ";
+        cin >> bank;
+        cout << "  Enter account number: ";
+        cin >> acc;
+        payment = new NetBankingPayment(bank, acc);
+    }
 
-    PaymentStrategy *pay1 = new UPIPayment("akshath@upi");
-    pay1->pay(b1->getTotalAmount());
-    delete pay1;
+    // Create passenger, seat, booking
+    static int passengerCount = 1;
+    string pid = "P" + to_string(passengerCount++);
+    Passenger p(pid, name, email, phone);
+    Seat s(seatNum, type, price);
 
-    PaymentStrategy *pay2 = new CreditCardPayment("1234-5678-9012", "Rahul");
-    pay2->pay(b2->getTotalAmount());
-    delete pay2;
+    printLine();
+    payment->pay(price);
+    delete payment;
 
-    // ─── STEP 9: State Machine Demo ───────────────────────
-    printDivider("BOOKING STATE MACHINE");
+    Booking b = bm.createBooking(p, *chosen, s);
 
-    BookingContext stateDemo;
-    cout << "State: " << stateDemo.getStateName() << endl;
+    // Attach notifications
+    EmailNotification *emailNotif = new EmailNotification(email);
+    SMSNotification *smsNotif = new SMSNotification(phone);
+    Booking *storedBooking = bm.getBooking(b.getBookingId());
+    if (storedBooking)
+    {
+        storedBooking->addObserver(emailNotif);
+        storedBooking->addObserver(smsNotif);
+    }
 
-    stateDemo.confirm();
-    cout << "State: " << stateDemo.getStateName() << endl;
+    chosen->bookSeat();
 
-    stateDemo.cancel();
-    cout << "State: " << stateDemo.getStateName() << endl;
+    printLine();
+    b.printSummary();
+}
 
-    stateDemo.cancel(); // should fail gracefully
-
-    // ─── STEP 10: Cancel a Real Booking ───────────────────
-    printDivider("CANCELLING BOOKING BK001");
-    bm.cancelBooking("BK001"); // observers will fire!
-
-    // ─── STEP 11: Final Booking List ──────────────────────
-    printDivider("FINAL BOOKING STATUS");
+void viewBookings(BookingManager &bm)
+{
+    printLine();
     bm.listAllBookings();
+}
+
+void cancelBooking(BookingManager &bm)
+{
+    string bookingId;
+    cout << "  Enter Booking ID to cancel (e.g. BK001): ";
+    cin >> bookingId;
+    printLine();
+
+    if (bm.cancelBooking(bookingId))
+    {
+        cout << "  Booking " << bookingId << " cancelled successfully!" << endl;
+    }
+    else
+    {
+        cout << "  Could not cancel. Booking not found or already cancelled." << endl;
+    }
+}
+
+// ── main ──────────────────────────────────────────────────
+int main()
+{
+    FlightManager &fm = FlightManager::getInstance();
+    BookingManager &bm = BookingManager::getInstance();
+    setupData(fm);
+
+    int choice;
+    do
+    {
+        printMenu();
+        cin >> choice;
+        switch (choice)
+        {
+        case 1:
+            viewAllFlights(fm);
+            break;
+        case 2:
+            searchFlights(fm);
+            break;
+        case 3:
+            bookSeat(bm, fm);
+            break;
+        case 4:
+            viewBookings(bm);
+            break;
+        case 5:
+            cancelBooking(bm);
+            break;
+        case 6:
+            cout << "  Goodbye!" << endl;
+            break;
+        default:
+            cout << "  Invalid choice!" << endl;
+        }
+    } while (choice != 6);
 
     return 0;
 }
