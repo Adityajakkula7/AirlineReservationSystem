@@ -1,9 +1,10 @@
 # ✈️ Airline Reservation System
 
-A C++ Low Level Design (LLD) project implementing a fully functional Airline Reservation System using core OOP principles and design patterns.
+A C++ Low Level Design (LLD) project implementing a fully functional Airline Reservation System with an interactive CLI, core OOP principles and design patterns.
 
 ## 📌 Features
 
+- Interactive CLI menu for complete booking flow
 - Search flights by origin and destination
 - Book seats (Economy, Business, First Class)
 - Auto-generated booking IDs
@@ -11,6 +12,21 @@ A C++ Low Level Design (LLD) project implementing a fully functional Airline Res
 - Automatic Email & SMS notifications on booking events
 - Booking state management (Pending → Confirmed → Cancelled)
 - Cancel bookings with instant notifications
+
+## 🖥️ CLI Demo
+```
+----------------------------------------
+   AIRLINE RESERVATION SYSTEM
+----------------------------------------
+  1. View all flights
+  2. Search flights
+  3. Book a seat
+  4. View all bookings
+  5. Cancel a booking
+  6. Exit
+----------------------------------------
+  Enter choice:
+```
 
 ## 🏗️ Design Patterns Used
 
@@ -70,13 +86,16 @@ AirlineReservationSystem/
 │   ├── ConfirmedState.cpp
 │   ├── CancelledState.cpp
 │   └── BookingContext.cpp
-└── main.cpp
+├── docs/
+│   └── ARCHITECTURE.md
+├── main.cpp
+└── README.md
 ```
 
 ## ⚙️ How to Run
 
 ### Prerequisites
-- g++ compiler (MinGW on Windows)
+- g++ compiler (MinGW on Windows / g++ on Linux/Mac)
 
 ### Compile
 ```bash
@@ -91,11 +110,6 @@ g++ main.cpp src/Airport.cpp src/Flight.cpp src/Seat.cpp src/Passenger.cpp src/B
 
 ## 📊 Sample Output
 ```
-========== SETTING UP FLIGHTS ==========
-AI101 | Mumbai -> Delhi | Seats: 3
-6E202 | Mumbai -> Delhi | Seats: 2
-SG303 | Mumbai -> Bangalore | Seats: 5
-
 ========== PROCESSING PAYMENTS ==========
 Processing UPI payment of Rs.15000 from UPI ID: akshath@upi
 UPI Payment Successful!
@@ -118,3 +132,8 @@ UPI Payment Successful!
 - Memory Management (new/delete)
 - STL: vector, map
 - Object Composition
+- SOLID Principles
+
+## 👨‍💻 Author
+
+Aditya Jakkula — [github.com/Adityajakkula7](https://github.com/Adityajakkula7)
