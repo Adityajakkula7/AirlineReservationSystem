@@ -122,6 +122,151 @@ UPI Payment Successful!
   Event   : BOOKING CANCELLED
   Details : Booking BK001 for flight AI101 has been cancelled.
 ```
+## 📊 UML Class Diagram
+```mermaid
+classDiagram
+
+class Airport {
+    -string code
+    -string name
+    -string city
+    +getCode()
+    +getName()
+    +getCity()
+}
+
+class Flight {
+    -string flightNumber
+    -int totalSeats
+    -int availableSeats
+    +getFlightNumber()
+    +getAvailableSeats()
+    +bookSeat()
+}
+
+class Seat {
+    -string seatNumber
+    -SeatType type
+    -double price
+    -bool isBooked
+    +book()
+    +getPrice()
+}
+
+class Passenger {
+    -string passengerId
+    -string name
+    -string email
+    +getName()
+    +getEmail()
+}
+
+class Booking {
+    -string bookingId
+    -double totalAmount
+    +cancel()
+    +printSummary()
+}
+
+class FlightManager {
+    -vector flights
+    +getInstance()
+    +addFlight()
+    +searchFlights()
+}
+
+class BookingManager {
+    -map bookings
+    +getInstance()
+    +createBooking()
+    +cancelBooking()
+}
+
+class PaymentStrategy {
+    <<abstract>>
+    +pay()*
+}
+
+class UPIPayment {
+    -string upiId
+    +pay()
+}
+
+class CreditCardPayment {
+    -string cardNumber
+    +pay()
+}
+
+class NetBankingPayment {
+    -string bankName
+    +pay()
+}
+
+class IObserver {
+    <<abstract>>
+    +update()*
+}
+
+class ISubject {
+    -vector observers
+    +addObserver()
+    +notifyObservers()
+}
+
+class EmailNotification {
+    -string email
+    +update()
+}
+
+class SMSNotification {
+    -string phone
+    +update()
+}
+
+class BookingState {
+    <<abstract>>
+    +confirm()*
+    +cancel()*
+}
+
+class BookingContext {
+    -BookingState state
+    +confirm()
+    +cancel()
+}
+
+class PendingState {
+    +confirm()
+    +cancel()
+}
+
+class ConfirmedState {
+    +confirm()
+    +cancel()
+}
+
+class CancelledState {
+    +confirm()
+    +cancel()
+}
+
+Flight --> Airport
+Booking --> Flight
+Booking --> Seat
+Booking --> Passenger
+Booking --|> ISubject
+FlightManager --> Flight
+BookingManager --> Booking
+UPIPayment --|> PaymentStrategy
+CreditCardPayment --|> PaymentStrategy
+NetBankingPayment --|> PaymentStrategy
+EmailNotification --|> IObserver
+SMSNotification --|> IObserver
+BookingContext --> BookingState
+PendingState --|> BookingState
+ConfirmedState --|> BookingState
+CancelledState --|> BookingState
+```
 
 ## 🧠 Concepts Covered
 
